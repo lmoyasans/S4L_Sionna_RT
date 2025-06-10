@@ -56,11 +56,7 @@ This plugin is implemented with:
 
 ## Installation
 
-The plugin can be installed directly through pip:
-
-```bash
-pip install s4l-sionna-rt-plugin
-```
+The plugin can be installed directly to [Sim4Life](https://sim4life.swiss/) using the community store plugin installer.
 
 For development installations:
 
@@ -72,7 +68,7 @@ pip install -e .
 
 ## Usage
 
-This plugin will be automatically detected by [Sim4Life](https://sim4life.swiss/) when installed via pip in the internal environment or by the community store.
+This plugin will be automatically detected by [Sim4Life](https://sim4life.swiss/) when installed via pip in the internal environment (development purposes) or by the community store.
 
 
 ## Citation

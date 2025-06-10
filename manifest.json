@@ -2,7 +2,7 @@
     "icon" : "integration/simulation_icon.png",
     "title" : "S4L-Sionna RT Simulator",
     "description" : "Sim4Life integration of Sionna RT Simulator plugin for radio propagation modeling using ray tracing",
-    "version" : "1.0.0",
+    "version" : "1.0.1",
     "sim4life" : "9.0.0",
     "author" : "Lucia Moya-Sans",
     "author_email" : "moyasans@itis.swiss",
