@@ -242,7 +242,8 @@ class SimulationExtractorImpl:
         # assert len(self.FIELD_NAMES) == num_outputs - 1
         assert len(self._outputs) == num_outputs
 
-        self._outputs[num_outputs - 1] = self.json_data
+        # TODO: there is not yet a proper DataObject for plotly json
+        # self._outputs[num_outputs - 1] = self.json_data
         self.define_child_properties(child, self.json_data)
 
 
