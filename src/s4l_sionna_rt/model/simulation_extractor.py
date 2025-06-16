@@ -176,7 +176,7 @@ class SimulationExtractorImpl:
 
         if plot_types == "RadioMap":
             plots_group.Description = "RadioMap solver results"
-            options = ["SINR", "Path gain", "RSS", "Image"]
+            options = ["SINR", "Path gain", "RSS"]
             options_tr = [f"Transmitter {e}" for e in np.linspace(0,np.array(json_data["sinr"]).shape[0], np.array(json_data["sinr"]).shape[0],dtype=int)]
             prop = plots_group.Add("ind", xc.PropertyEnum(options_tr,0))
             prop.Description = "Select transmitter"
@@ -185,7 +185,7 @@ class SimulationExtractorImpl:
         else:
             try:
                 plots_group.Description = "Paths solver results"
-                options = ["Channel frequency response", "Channel Impulse response (histogram)", "Channel Impulse response", "Discrete channel taps", "Image"]
+                options = ["Channel frequency response", "Channel Impulse response (histogram)", "Channel Impulse response", "Discrete channel taps"]
                 options_tr =[f"Transmitter {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[0], np.array(json_data["h_freq"]).shape[0],dtype=int)]
                 prop = plots_group.Add("ind", xc.PropertyEnum(options_tr,0))
                 prop.Description = "Select transmitter"
@@ -224,6 +224,10 @@ class SimulationExtractorImpl:
         prop.Description = "Show Plot"
         child.show_plot_prop = prop
 
+        prop = plots_group.Add("show_image", xc.PropertyPushButton())
+        prop.Description = "Show Image"
+        child.show_image_prop = prop
+
         # connect not right away, but after the seriazliation
         asyncio.get_event_loop().call_soon(
             child._connect_signals
@@ -242,7 +246,6 @@ class SimulationExtractorImpl:
         # assert len(self.FIELD_NAMES) == num_outputs - 1
         assert len(self._outputs) == num_outputs
 
-        self._outputs[num_outputs - 1] = self.json_data
         self.define_child_properties(child, self.json_data)
 
 
@@ -322,6 +325,7 @@ class AlgorithmImpl(IExtractorParent):
         self.index_selector4: xc.PropertyEnum = None
         self.index_selector5: xc.PropertyEnum = None
         self.show_plot_prop: xc.PropertyPushButton = None
+        self.show_image_prop: xc.PropertyPushButton = None
 
         
         
@@ -332,6 +336,11 @@ class AlgorithmImpl(IExtractorParent):
         Defines the behavior of the the visualization, generating the necessary 
         plots based on the parameters provided by the user in the UI
         """
+
+        def show_image():
+            plot_data = getattr(plots_functions, "generate_image")(self._extractor.json_data["image"], "Rendered scene")
+            ppm.create_plot(plot_data)
+
         
         def show_plot():
             assert isinstance(self.plot_selector_prop, xc.PropertyEnum)
@@ -341,28 +350,26 @@ class AlgorithmImpl(IExtractorParent):
                 x = (np.linspace(0,np.array(np.array(self._extractor.json_data["sinr"])).shape[2], np.array(self._extractor.json_data["sinr"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["sinr"]).shape[1], np.array(self._extractor.json_data["sinr"]).shape[1], dtype=int ))
                 z_data = np.array(self._extractor.json_data["sinr"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "SINR", "Signal-to-interference-plus-noise ratio [dB]")
+                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "SINR: Transmitter {}".format(tr_index), "Signal-to-interference-plus-noise ratio [dB]")
             elif plot_name == "Path gain":
                 tr_index = self.index_selector.Value
                 x = (np.linspace(0,np.array(self._extractor.json_data["path_gain"]).shape[2], np.array(self._extractor.json_data["path_gain"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["path_gain"]).shape[1], np.array(self._extractor.json_data["path_gain"]).shape[1], dtype=int ))
                 z_data = np.array(self._extractor.json_data["path_gain"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "Path gain", "Path_gain [dB]")
+                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "Path gain: Transmitter {}".format(tr_index), "Path_gain [dB]")
             elif plot_name == "RSS":
                 tr_index = self.index_selector.Value
                 x = (np.linspace(0,np.array(self._extractor.json_data["rss"]).shape[2], np.array(self._extractor.json_data["rss"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["rss"]).shape[1], np.array(self._extractor.json_data["rss"]).shape[1],dtype=int ))
                 z_data = np.array(self._extractor.json_data["rss"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "RSS","Received signal strength(RSS) [dBm]")
-            elif plot_name == "Image":
-                plot_data = getattr(plots_functions, "generate_image")(self._extractor.json_data["image"], "Rendered scene")
+                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "RSS: Transmitter {}".format(tr_index),"Received signal strength(RSS) [dBm]")
             elif plot_name =="Channel frequency response":
                 ind1 = self.index_selector.Value
                 ind2 = self.index_selector2.Value
                 ind3 = self.index_selector3.Value
                 ind4 = self.index_selector4.Value
                 ind5 = self.index_selector5.Value
-                plot_data = getattr(plots_functions, "generate_line_plot")(self._extractor.json_data["h_freq"][ind1][ind2][ind3][ind4][ind5], "Subcarrier index","|h_freq|", "Channel frequency response")
+                plot_data = getattr(plots_functions, "generate_line_plot")(self._extractor.json_data["h_freq"][ind1][ind2][ind3][ind4][ind5], "Subcarrier index","|h_freq|", "Channel frequency response: ({},{},{},{})".format(ind1,ind2,ind3,ind4,ind5))
             elif plot_name =="Discrete channel taps":
                 ind1 = self.index_selector.Value
                 ind2 = self.index_selector2.Value
@@ -372,7 +379,7 @@ class AlgorithmImpl(IExtractorParent):
                 taps_selected=self._extractor.json_data["taps"][ind1][ind2][ind3][ind4][ind5]
                 taps_complex = np.array([complex(d['real'], d['imag']) for d in taps_selected])
                 taps = np.abs(taps_complex)
-                plot_data = getattr(plots_functions, "generate_discrete_scatter_plot")(taps)
+                plot_data = getattr(plots_functions, "generate_discrete_scatter_plot")(taps, title="Discrete channel taps: ({},{},{},{})".format(ind1,ind2,ind3,ind4,ind5))
             elif plot_name == "Channel Impulse response (histogram)":
                 ind1 = self.index_selector.Value
                 ind2 = self.index_selector2.Value
@@ -386,7 +393,7 @@ class AlgorithmImpl(IExtractorParent):
                 tau_selected = np.array(self._extractor.json_data["tau"][ind1][ind2][ind3][ind4])
                 bins = np.linspace(tau_selected.min(), tau_selected.max(), 20)
                 hist, bin_edges = np.histogram(tau_selected, bins=bins, weights=a_abs)
-                plot_data = getattr(plots_functions, "generate_cir_binned_histogram")(bin_edges, hist)
+                plot_data = getattr(plots_functions, "generate_cir_binned_histogram")(bin_edges, hist, title="Binned Channel Impulse Response: ({},{},{},{})".format(ind1,ind2,ind3,ind4,ind5))
             elif plot_name == "Channel Impulse response":
                 ind1 = self.index_selector.Value
                 ind2 = self.index_selector2.Value
@@ -398,12 +405,14 @@ class AlgorithmImpl(IExtractorParent):
                 a_complex = np.array([complex(d['real'], d['imag']) for d in a])
                 a_abs = np.abs(a_complex)
                 tau_selected = np.array(self._extractor.json_data["tau"][ind1][ind2][ind3][ind4])
-                plot_data = getattr(plots_functions, "generate_discrete_scatter_plot")(a_abs, tau_selected, title="Channel Impulse response", name="tau vs a", xaxis="Tau [ns]", yaxis="|a|")
+                plot_data = getattr(plots_functions, "generate_discrete_scatter_plot")(a_abs, tau_selected, title="Binned Channel Impulse Response: ({},{},{},{})".format(ind1,ind2,ind3,ind4,ind5), name="tau vs a", xaxis="Tau [ns]", yaxis="|a|")
             ppm.create_plot(plot_data)
             
                 
         assert isinstance(self.show_plot_prop, xc.PropertyPushButton)
         self.show_plot_prop.OnClicked.Connect(show_plot)
+        assert isinstance(self.show_image_prop, xc.PropertyPushButton)
+        self.show_image_prop.OnClicked.Connect(show_image)
 
 
 

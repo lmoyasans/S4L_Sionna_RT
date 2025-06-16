@@ -128,7 +128,7 @@ def generate_bar_plot() -> dict:
     trace_name = "Bar Values"
     x_axis_title = "Categories"
     y_axis_title = "Values"
-    bar_color = "rgb(0,83,138)"
+    bar_color = "rgb(57,231,95)"
     orientation = "v" 
     
     trace = {
@@ -300,7 +300,7 @@ def generate_3d_scatter() -> dict:
     x_axis_title = "X Axis"
     y_axis_title = "Y Axis"
     z_axis_title = "Z Axis"
-    marker_color = "rgb(0,83,138)"
+    marker_color = "rgb(57,231,95)"
     marker_size = 5
     marker_opacity = 0.8
     

@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="s4l-sionna-rt-plugin",
-    version="1.0.1",
+    version="1.0.2",
     description="A simulation plugin for Ray-Tracing electromagnetics in S4L",
     author="Lucia Moya-Sans",
     author_email="moyasans@itis.swiss",

@@ -6,8 +6,12 @@ import XCoreHeadless
 import XCoreModeling as xm
 from s4l_core.simulator_plugins.base.model.geometry_interface import HasGeometries
 from s4l_core.simulator_plugins.base.model.group import Group
+import s4l_v1 as s4l
 from s4l_sionna_rt.solver.driver import api_models as conf
+from s4l_core.simulator_plugins.base.model.geometry import Geometry
 from .draw import draw_properties
+import asyncio
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from s4l_core.simulator_plugins.base.model.controller_interface import TreeItem
@@ -41,6 +45,28 @@ class Receiver(HasGeometries):
 
         self.config = conf.create_Receiver()
         draw_properties(self,self.config)
+        self._properties.position.OnModified.Connect(self._update)
+        asyncio.get_event_loop().call_soon(
+            self._connect_signals
+        )
+
+    def _connect_signals(self) -> None:
+        def description_changed(
+            prop: XCore.Property, mod_type: XCore.PropertyModificationTypeEnum
+        ):
+            if mod_type != XCore.kPropertyModified:
+                return
+
+            self._notify_modified(True)
+
+    def _update(self, prop: XCore.Property, mod_type: XCore.PropertyModificationTypeEnum):
+
+        if prop.Description == "Position":
+            if len(self._geometries)==1:
+                entity = xm.GetActiveModel().LookupEntity(XCore.Uuid(self._geometries[0].entity_id))
+                t = s4l.model.Transform()
+                t.Translation = prop.Value - entity.Position
+                entity.ApplyTransform(t)
 
     def _get_allowed_entity_types(self) -> tuple[type[xm.Entity], ...]:
         """
@@ -52,6 +78,62 @@ class Receiver(HasGeometries):
             Tuple of allowed entity types (only Vertex objects in this case)
         """
         return (xm.Vertex,)
+
+    @override
+    def can_add_geometry(self, entity_id: str) -> bool:
+        """
+        Check if a geometry with the given entity ID can be added.
+
+        Args:
+            entity_id: The entity ID to check
+
+        Returns:
+            True if the entity is valid for the allowed types, False otherwise
+        """
+        entity = xm.GetActiveModel().LookupEntity(XCore.Uuid(entity_id))
+
+        if not isinstance(entity, self._allowed_entity_types):
+            return False
+
+        # Check if entity is already added
+        for geometry in self._geometries:
+            if geometry.entity_id == entity_id:
+                return False
+
+        return self.parent.check_geometry(entity_id)
+
+    def change_position(self, prop: XCore.Property, mod_type: XCore.PropertyModificationTypeEnum):
+        entity = xm.GetActiveModel().LookupEntity(XCore.Uuid(self._geometries[0].entity_id))
+        try:
+            self._properties.position.Value = entity.Position
+        except Exception as e:
+            logger.error(e)
+
+    @override
+    def add_geometry(self, entity_id: str) -> bool:
+        """
+        Add a geometry with the given entity ID.
+
+        Args:
+            entity_id: The entity ID to add
+
+        Returns:
+            True if the geometry was added, False otherwise
+        """
+        if not self.can_add_geometry(entity_id):
+            return False
+
+        # Pass the allowed entity types to the geometry
+        geometry = Geometry(self, entity_id, self._allowed_entity_types)
+        entity = xm.GetActiveModel().LookupEntity(XCore.Uuid(geometry.entity_id))
+        entity.Properties.OnChildModified.Connect(self.change_position)
+        self._properties.position.Value = entity.Position
+        color = XCore.Color(0.145,0.38,1,1)
+        entity.Color = color
+        self._geometries.append(geometry)
+        self._notify_modified(True)
+        return True
+
 
     def __setstate__(self, state) -> None:
         """
@@ -167,3 +249,10 @@ class Receivers(Group[Receiver]):
             The plural form of the element type (e.g., "Receiver")
         """
         return f"Receivers"
+
+    def check_geometry(self, entity_id):
+        for trs in self.elements:
+            for geometry in trs._geometries:
+                if geometry.entity_id == entity_id:
+                    return False
+        return True

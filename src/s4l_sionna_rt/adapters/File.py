@@ -30,6 +30,8 @@ class File:
         if not self.allow_none and self.value == None:
             return False, "File selection required"
         elif not self.allow_none and os.path.exists(self.value):
+            return False, "File not found"
+        elif not self.allow_none and os.path.exists(self.value):
             return False, "File selection required"
         return True, ""
 
