@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 class AntennaArray: 
     def __init__(self, name=None):
-        logger.debug(id(self))
         self._properties: XCoreHeadless.DialogOptions = XCoreHeadless.DialogOptions()
         if name != None:
             self._properties.Description = name

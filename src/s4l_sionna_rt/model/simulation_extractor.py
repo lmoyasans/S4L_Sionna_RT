@@ -13,6 +13,7 @@ import XCore as xc
 import XPostProcessor as xp
 import XPostProPython as pp
 import numpy as np
+from sionna.rt.utils import watt_to_dbm, log10
 
 FILENAME_SUFFIX = ".vtr"
 JSON_OUTPUT = "summary.json"
@@ -177,7 +178,7 @@ class SimulationExtractorImpl:
         if plot_types == "RadioMap":
             plots_group.Description = "RadioMap solver results"
             options = ["SINR", "Path gain", "RSS"]
-            options_tr = [f"Transmitter {e}" for e in np.linspace(0,np.array(json_data["sinr"]).shape[0], np.array(json_data["sinr"]).shape[0],dtype=int)]
+            options_tr = [f"Transmitter {e}" for e in np.linspace(0,np.array(json_data["sinr"]).shape[0], np.array(json_data["sinr"]).shape[0],dtype=int, endpoint=False)]
             prop = plots_group.Add("ind", xc.PropertyEnum(options_tr,0))
             prop.Description = "Select transmitter"
             child.index_selector = prop
@@ -186,23 +187,23 @@ class SimulationExtractorImpl:
             try:
                 plots_group.Description = "Paths solver results"
                 options = ["Channel frequency response", "Channel Impulse response (histogram)", "Channel Impulse response", "Discrete channel taps"]
-                options_tr =[f"Transmitter {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[0], np.array(json_data["h_freq"]).shape[0],dtype=int)]
+                options_tr =[f"Transmitter {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[0], np.array(json_data["h_freq"]).shape[0],dtype=int, endpoint=False)]
                 prop = plots_group.Add("ind", xc.PropertyEnum(options_tr,0))
                 prop.Description = "Select transmitter"
                 child.index_selector = prop
-                options_tr =[f"TX_ant {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[1], np.array(json_data["h_freq"]).shape[1],dtype=int)]
+                options_tr =[f"TX_ant {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[1], np.array(json_data["h_freq"]).shape[1],dtype=int, endpoint=False)]
                 prop = plots_group.Add("ind2", xc.PropertyEnum(options_tr,0))
                 prop.Description = "Select tx_ant"
                 child.index_selector2 = prop
-                options_tr =[f"Receiver {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[2], np.array(json_data["h_freq"]).shape[2],dtype=int)]
+                options_tr =[f"Receiver {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[2], np.array(json_data["h_freq"]).shape[2],dtype=int, endpoint=False)]
                 prop = plots_group.Add("ind3", xc.PropertyEnum(options_tr,0))
                 prop.Description = "Select receiver"
                 child.index_selector3 = prop
-                options_tr =[f"RX_ant {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[3], np.array(json_data["h_freq"]).shape[3],dtype=int)]
+                options_tr =[f"RX_ant {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[3], np.array(json_data["h_freq"]).shape[3],dtype=int, endpoint=False)]
                 prop = plots_group.Add("ind4", xc.PropertyEnum(options_tr,0))
                 prop.Description = "Select rx_ant"
                 child.index_selector4 = prop
-                options_tr =[f"Timestep {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[4], np.array(json_data["h_freq"]).shape[4],dtype=int)]
+                options_tr =[f"Timestep {e}" for e in np.linspace(0,np.array(json_data["h_freq"]).shape[4], np.array(json_data["h_freq"]).shape[4],dtype=int, endpoint=False)]
                 prop = plots_group.Add("ind5", xc.PropertyEnum(options_tr,0))
                 prop.Description = "Select time step"
                 child.index_selector5 = prop
@@ -350,19 +351,19 @@ class AlgorithmImpl(IExtractorParent):
                 x = (np.linspace(0,np.array(np.array(self._extractor.json_data["sinr"])).shape[2], np.array(self._extractor.json_data["sinr"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["sinr"]).shape[1], np.array(self._extractor.json_data["sinr"]).shape[1], dtype=int ))
                 z_data = np.array(self._extractor.json_data["sinr"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "SINR: Transmitter {}".format(tr_index), "Signal-to-interference-plus-noise ratio [dB]")
+                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "SINR: Transmitter {}".format(tr_index), "Signal-to-interference-plus-noise ratio [dB]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
             elif plot_name == "Path gain":
                 tr_index = self.index_selector.Value
                 x = (np.linspace(0,np.array(self._extractor.json_data["path_gain"]).shape[2], np.array(self._extractor.json_data["path_gain"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["path_gain"]).shape[1], np.array(self._extractor.json_data["path_gain"]).shape[1], dtype=int ))
                 z_data = np.array(self._extractor.json_data["path_gain"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "Path gain: Transmitter {}".format(tr_index), "Path_gain [dB]")
+                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "Path gain: Transmitter {}".format(tr_index), "Path_gain [dB]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
             elif plot_name == "RSS":
                 tr_index = self.index_selector.Value
                 x = (np.linspace(0,np.array(self._extractor.json_data["rss"]).shape[2], np.array(self._extractor.json_data["rss"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["rss"]).shape[1], np.array(self._extractor.json_data["rss"]).shape[1],dtype=int ))
                 z_data = np.array(self._extractor.json_data["rss"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "RSS: Transmitter {}".format(tr_index),"Received signal strength(RSS) [dBm]")
+                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "RSS: Transmitter {}".format(tr_index),"Received signal strength(RSS) [dBm]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
             elif plot_name =="Channel frequency response":
                 ind1 = self.index_selector.Value
                 ind2 = self.index_selector2.Value

@@ -249,7 +249,7 @@ def generate_cir_binned_histogram(bin_edges, hist, title="Binned Channel Impulse
 
 
 
-def generate_heatmap(x,y,z_data, title, name) -> dict:
+def generate_heatmap(x,y,z_data, title, name, vmin, vmax) -> dict:
     id = "5"
     x_labels = [f"{v:.1f}" for v in x]
     y_labels = [f"{v:.1f}" for v in y]
@@ -266,6 +266,8 @@ def generate_heatmap(x,y,z_data, title, name) -> dict:
                 "z": z_data.tolist(),
                 "x": x_labels,
                 "y": y_labels,
+                "zmin": vmin,
+                "zmax": vmax,
                 "colorscale": colorscale,
                 "showscale": show_scale,
                 "name": name

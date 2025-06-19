@@ -166,6 +166,37 @@ create_Sample_Positions = lambda:Sample_Positions(
     seed =adp.Integer(1, name="Seed"),
 )
 
+
+@dataclass_json
+@dataclass
+class Resizing:
+
+    activate:adp.Boolean
+    center: adp.Vec3 
+    orientation: adp.Vec3 
+    size:adp.Vec2 
+
+create_Resizing = lambda:Resizing(
+    activate = adp.Boolean(False),
+    center = adp.Vec3(0,0,0, name="Center"),
+    orientation = adp.Vec3(0,0,0, name="Orientation"),
+    size = adp.Vec2(400,400, name="Size"),
+)
+
+@dataclass_json
+@dataclass
+class Rescaling:
+    activate: adp.Boolean
+    rm_vmax: adp.Real
+    rm_vmin: adp.Real
+
+
+create_Rescaling = lambda:Rescaling(
+    activate = adp.Boolean(False),
+    rm_vmax= adp.Real(-1, name="Vmax"),
+    rm_vmin=adp.Real(-1, name="Vmin"),
+)
+
 @dataclass_json
 @dataclass
 class Transmitter:
@@ -252,17 +283,14 @@ class RadioMap:
     max_depth:adp.Integer
     seed:adp.Integer
     stop_threshold:adp.Integer 
-    center: adp.Vec3 
-    orientation: adp.Vec3 
-    size:adp.Vec2 
     cell_size:adp.Vec2
     rr_depth: adp.Integer 
     rr_prob: adp.Real 
     rm_db_scale: adp.Boolean
     rm_metric: adp.String
-    rm_vmax: adp.Real
-    rm_vmin:adp.Real
     rm_show_color_bar:adp.Boolean
+    resizing: adp.Resizing
+    rescaling: adp.Rescaling
     sample_positions:adp.Sample_Positions
     
 
@@ -273,19 +301,16 @@ create_RadioMap = lambda : RadioMap(
     diffuse_reflection = adp.Boolean(False, name="Diffuse reflection"),
     max_depth = adp.Integer(3, name="Max depth"), 
     seed = adp.Integer(42, name="Seed"),
-    stop_threshold = adp.Integer(10, name="Stop threshold"),
+    stop_threshold = adp.Integer(-20000, name="Stop threshold"),
     refraction = adp.Boolean(True, name="Refraction"),
-    center = adp.Vec3(0,0,0, name="Center"),
-    orientation = adp.Vec3(0,0,0, name="Orientation"),
-    size = adp.Vec2(400,400, name="Size"),
     cell_size = adp.Vec2(5,5, name="Cell size"),
     rr_depth = adp.Integer(-1, name="Russian roulette depth"),
     rr_prob = adp.Real(0.95, name="Russian roulette probability"),
     rm_db_scale= adp.Boolean(True, name="dB scale"),
     rm_metric=adp.String("path_gain", True, ["path_gain", "rss", "sinr"],0, name="Metric to show"),
-    rm_vmax= adp.Real(-1, name="Vmax"),
-    rm_vmin=adp.Real(-1, name="Vmin"),
     rm_show_color_bar=adp.Boolean(False, name="Show colorbar"),
+    resizing=adp.Resizing(name="Resizing"),
+    rescaling=adp.Rescaling(name="Rescaling"),
     sample_positions=adp.Sample_Positions(name="Sample positions"),
     
 )

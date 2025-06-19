@@ -125,7 +125,6 @@ if isinstance(antennas["tx_array"]["polarization_model"],dict):
     t_polarization_model = customLoader.register_polarization_models(antennas["tx_array"]["polarization_model"]["custom"])
 else:
     t_polarization_model = antennas["tx_array"]["polarization_model"]
-logger.debug(antennas["tx_array"]["vertical_spacing"])
 scene.tx_array = rt.PlanarArray(num_rows=antennas["tx_array"]["num_rows"], 
                                 num_cols = antennas["tx_array"]["num_cols"], 
                                 vertical_spacing = antennas["tx_array"]["vertical_spacing"],
@@ -218,8 +217,7 @@ if len(materials)!=0:
             print(materials[mat]["ITU_name"])
             mats.append(rt.ITURadioMaterial(name = mat, itu_type=materials[mat]["ITU_name"], thickness=0.1,  color=(0.8, 0.1, 0.1)))
             for j,obj in enumerate(materials[mat]["geometries"]):
-                logger.debug(obj["fname"])
-                logger.debug(obj["name"])
+
                 objs.append(
                     rt.SceneObject(fname = obj["fname"], name = obj["name"], radio_material = mats[i])
                 )
@@ -239,8 +237,6 @@ if len(materials)!=0:
                 objs.append(
                     rt.SceneObject(fname = "input_files/dee5f659-4795-48b3-a0fa-fe9551866908.ply", name = obj["name"], radio_material = mats[i])
                 )
-    logger.debug(objs[0].position)
-    logger.debug(objs[0].orientation)
     scene.edit(add=objs)
 
 ##############################################
@@ -256,10 +252,19 @@ else:
 if solver_settings["type"] == "RadioMap":
 
     solver = rt.RadioMapSolver()
+    if solver_settings["resizing"]["activate"] == False:
+        size = None
+        center= None
+        orientation = None
+    else:
+        size = mi.Point2f(solver_settings["resizing"]["size"])
+        center = mi.Point3f(solver_settings["resizing"]["center"])
+        orientation = mi.Point3f(solver_settings["resizing"]["orientation"])
+
     rm = solver(scene=scene, 
-                center = mi.Point3f(solver_settings["center"]),
-                orientation = mi.Point3f(solver_settings["orientation"]),
-                size=mi.Point2f(solver_settings["size"]),
+                center = center,
+                orientation = orientation,
+                size=size,
                 cell_size=mi.Point2f(solver_settings["cell_size"]),
                 samples_per_tx=solver_settings["samples"],
                 max_depth=solver_settings["max_depth"],
@@ -273,13 +278,6 @@ if solver_settings["type"] == "RadioMap":
                 stop_threshold=solver_settings["stop_threshold"]
                 )
 
-    summary = {
-        "type":"RadioMap",
-        "path_gain":rm.path_gain.numpy().tolist(),
-        "rss": rm.rss.numpy().tolist(),
-        "sinr": rm.sinr.numpy().tolist(),
-        "image":output_dir + "/render_file.png",
-    }
 
     if solver_settings["sample_positions"]["activate"] == True:
         positions,cell_ids = rm.sample_positions(num_pos=solver_settings["sample_positions"]["num_positions"], 
@@ -301,6 +299,13 @@ if solver_settings["type"] == "RadioMap":
                 r = rt.Receiver(f"rx-{len(positions[1])*l + ll}", position = p.tolist(), orientation = [0,0,0])
                 scene.add(r)
                 rx.append(r)
+    
+    if solver_settings["rescaling"]["activate"] == True:
+        rm_vmin = solver_settings["rescaling"]["rm_vmin"]
+        rm_vmax = solver_settings["rescaling"]["rm_vmax"]
+    else:
+        rm_vmin = None
+        rm_vmax = None
 
     scene.render_to_file(camera=my_cam, filename = output_dir + "/render_file.png", radio_map = rm, 
                         fov = render_settings["fov"],
@@ -310,11 +315,20 @@ if solver_settings["type"] == "RadioMap":
                         num_samples = render_settings["num_samples"],
                         resolution=(int(render_settings["resolution"][0]),int(render_settings["resolution"][1])),
                         rm_db_scale= solver_settings["rm_db_scale"], 
-                        rm_vmin = solver_settings["rm_vmin"], 
-                        rm_vmax = solver_settings["rm_vmax"], 
+                        rm_vmin = rm_vmin, 
+                        rm_vmax = rm_vmax, 
                         rm_metric=solver_settings["rm_metric"],
                         )
         
+    summary = {
+        "type":"RadioMap",
+        "path_gain":rm.path_gain.numpy().tolist(),
+        "rss": rm.rss.numpy().tolist(),
+        "sinr": rm.sinr.numpy().tolist(),
+        "image":output_dir + "/render_file.png",
+        "vmin":rm_vmin,
+        "vmax":rm_vmax,
+    }
 
     with open(os.path.join(output_dir, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2,  default=custom_json)
@@ -341,7 +355,7 @@ else:
                         clip_plane_orientation=render_settings["clip_plane_orientation"],
                         envmap=render_settings["envmap"],
                         num_samples = render_settings["num_samples"],
-                        resolution=render_settings["resolution"],
+                        resolution=(int(render_settings["resolution"][0]),int(render_settings["resolution"][1])),
                         paths=paths
                         )
 

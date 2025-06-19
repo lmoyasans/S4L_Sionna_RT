@@ -11,3 +11,5 @@ from .Vec2 import *
 from .Sample_Positions import *
 from .File import *
 from .Base import *
+from .Resizing import *
+from .Rescaling import *

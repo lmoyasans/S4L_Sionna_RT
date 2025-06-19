@@ -76,7 +76,6 @@ class Transmitter(HasGeometries):
         if prop.Description == "Position":
             if len(self._geometries)==1:
                 entity = xm.GetActiveModel().LookupEntity(XCore.Uuid(self._geometries[0].entity_id))
-                logger.debug(entity.__dir__())
                 t = s4l.model.Transform()
                 t.Translation = prop.Value - entity.Position
                 entity.ApplyTransform(t)

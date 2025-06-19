@@ -115,8 +115,6 @@ class MaterialSettings(HasGeometries):
         self._properties.Add("type", typ)
 
         for i in conf.MATERIAL_TYPES:
-            logger.debug(i)
-            logger.debug(i())
             if typ.ValueDescription == i().__class__.__name__:
                 self.config = i()
                 

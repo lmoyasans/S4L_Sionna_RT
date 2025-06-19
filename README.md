@@ -87,7 +87,7 @@ If you are using this code in academic research, we would be grateful if you cou
  author = {Moya-Sans, Lucia},
  note = {https://github.com/lmoyasans/S4L_Sionna_RT},
  year = {2025},
- version = {1.0.0}
+ version = {1.0.3}
 }
 
 @software{sionna,
