@@ -48,6 +48,8 @@ class Antennas(TreeItem):
             state: The serialized state to restore from
         """
         super().__setstate__(state)
+        self._properties.Clear()
+        draw_properties(self,self.config)
 
     @property
     def description(self) -> str:

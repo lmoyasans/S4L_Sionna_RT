@@ -249,44 +249,74 @@ def generate_cir_binned_histogram(bin_edges, hist, title="Binned Channel Impulse
 
 
 
-def generate_heatmap(x,y,z_data, title, name, vmin, vmax) -> dict:
+def generate_heatmap(x,y,z_data, title, name, vmin=None, vmax=None) -> dict:
     id = "5"
     x_labels = [f"{v:.1f}" for v in x]
     y_labels = [f"{v:.1f}" for v in y]
     x_axis_title = "Cell index (X Axis)"
     y_axis_title = "Cell index (Y Axis)"
-    colorscale = "Viridis"
+    colorscale = "Electric"
     show_scale = True
-    plot_config = {
-        "id": id,
-        "title": title,
-        "data": [
-            {
-                "type": "heatmap",
-                "z": z_data.tolist(),
-                "x": x_labels,
-                "y": y_labels,
-                "zmin": vmin,
-                "zmax": vmax,
-                "colorscale": colorscale,
-                "showscale": show_scale,
-                "name": name
+    if vmin!= None and vmax!=None:
+        plot_config = {
+            "id": id,
+            "title": title,
+            "data": [
+                {
+                    "type": "heatmap",
+                    "z": z_data.tolist(),
+                    "x": x_labels,
+                    "y": y_labels,
+                    "zmin": vmin,
+                    "zmax": vmax,
+                    "colorscale": colorscale,
+                    "showscale": show_scale,
+                    "name": name
+                }
+            ],
+            "layout": {
+                "title": {
+                    "text": title
+                },
+                "xaxis": {
+                    "title": x_axis_title
+                },
+                "yaxis": {
+                    "title": y_axis_title
+                },
+                "annotations": [],
+                "margin": {}
             }
-        ],
-        "layout": {
-            "title": {
-                "text": title
-            },
-            "xaxis": {
-                "title": x_axis_title
-            },
-            "yaxis": {
-                "title": y_axis_title
-            },
-            "annotations": [],
-            "margin": {}
         }
-    }
+    else:
+        plot_config = {
+            "id": id,
+            "title": title,
+            "data": [
+                {
+                    "type": "heatmap",
+                    "z": z_data.tolist(),
+                    "x": x_labels,
+                    "y": y_labels,
+                    "colorscale": colorscale,
+                    "showscale": show_scale,
+                    "name": name
+                }
+            ],
+            "layout": {
+                "title": {
+                    "text": title
+                },
+                "xaxis": {
+                    "title": x_axis_title
+                },
+                "yaxis": {
+                    "title": y_axis_title
+                },
+                "annotations": [],
+                "margin": {}
+            }
+        }
     
     return plot_config
 
@@ -372,7 +402,7 @@ def generate_3d_surface() -> dict:
     x_axis_title = "X Axis"
     y_axis_title = "Y Axis"
     z_axis_title = "Z Axis"
-    colorscale = "Viridis"
+    colorscale = "Electric"
     show_scale = True
     opacity = 1.0
     
@@ -425,7 +455,7 @@ def generate_contour_plot() -> dict:
     y_values = y.tolist()
     x_axis_title = "X Axis"
     y_axis_title = "Y Axis"
-    colorscale = "Viridis"
+    colorscale = "Electric"
     contours_coloring = "heatmap"
     show_scale = True
     

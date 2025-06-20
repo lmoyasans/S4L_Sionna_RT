@@ -14,6 +14,7 @@ import XPostProcessor as xp
 import XPostProPython as pp
 import numpy as np
 from sionna.rt.utils import watt_to_dbm, log10
+from drjit.llvm import TensorXf
 
 FILENAME_SUFFIX = ".vtr"
 JSON_OUTPUT = "summary.json"
@@ -350,20 +351,47 @@ class AlgorithmImpl(IExtractorParent):
                 tr_index = self.index_selector.Value
                 x = (np.linspace(0,np.array(np.array(self._extractor.json_data["sinr"])).shape[2], np.array(self._extractor.json_data["sinr"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["sinr"]).shape[1], np.array(self._extractor.json_data["sinr"]).shape[1], dtype=int ))
-                z_data = np.array(self._extractor.json_data["sinr"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "SINR: Transmitter {}".format(tr_index), "Signal-to-interference-plus-noise ratio [dB]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
+                if self._extractor.json_data["db_scale"] == True:
+                    z_data = 10*log10(TensorXf(np.array(self._extractor.json_data["sinr"])[tr_index]))
+                    z_data = z_data.numpy()
+                    # Find the minimum value excluding -inf
+                    finite_min = np.min(z_data[np.isfinite(z_data)])
+                    # Replace -inf with (finite_min - 1)
+                    z_data = np.where(np.isneginf(z_data), finite_min - 1, z_data)
+                    plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "SINR: Transmitter {}".format(tr_index), "Signal-to-interference-plus-noise ratio [dB]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
+                else:
+                    z_data = np.array(self._extractor.json_data["sinr"])[tr_index]
+                    plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "SINR: Transmitter {}".format(tr_index), "Signal-to-interference-plus-noise ratio", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
             elif plot_name == "Path gain":
                 tr_index = self.index_selector.Value
                 x = (np.linspace(0,np.array(self._extractor.json_data["path_gain"]).shape[2], np.array(self._extractor.json_data["path_gain"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["path_gain"]).shape[1], np.array(self._extractor.json_data["path_gain"]).shape[1], dtype=int ))
-                z_data = np.array(self._extractor.json_data["path_gain"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "Path gain: Transmitter {}".format(tr_index), "Path_gain [dB]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
+                if self._extractor.json_data["db_scale"] == True:
+                    z_data = 10*log10(TensorXf(np.array(self._extractor.json_data["path_gain"])[tr_index]))
+                    z_data = z_data.numpy()
+                    # Find the minimum value excluding -inf
+                    finite_min = np.min(z_data[np.isfinite(z_data)])
+                    # Replace -inf with (finite_min - 1)
+                    z_data = np.where(np.isneginf(z_data), finite_min - 1, z_data)
+                    plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "Path gain: Transmitter {}".format(tr_index), "Path_gain [dB]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
+                else:
+                    z_data = np.array(self._extractor.json_data["path_gain"])[tr_index]
+                    plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "Path gain: Transmitter {}".format(tr_index), "Path_gain", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
             elif plot_name == "RSS":
                 tr_index = self.index_selector.Value
                 x = (np.linspace(0,np.array(self._extractor.json_data["rss"]).shape[2], np.array(self._extractor.json_data["rss"]).shape[2], dtype=int ))
                 y = (np.linspace(0,np.array(self._extractor.json_data["rss"]).shape[1], np.array(self._extractor.json_data["rss"]).shape[1],dtype=int ))
-                z_data = np.array(self._extractor.json_data["rss"])[tr_index]
-                plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "RSS: Transmitter {}".format(tr_index),"Received signal strength(RSS) [dBm]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
+                if self._extractor.json_data["db_scale"] == True:
+                    z_data = watt_to_dbm(TensorXf(np.array(self._extractor.json_data["rss"])[tr_index]))
+                    z_data = z_data.numpy()
+                    # Find the minimum value excluding -inf
+                    finite_min = np.min(z_data[np.isfinite(z_data)])
+                    # Replace -inf with (finite_min - 1)
+                    z_data = np.where(np.isneginf(z_data), finite_min - 1, z_data)
+                    plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "RSS: Transmitter {}".format(tr_index),"Received signal strength(RSS) [dBm]", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
+                else:
+                    z_data = np.array(self._extractor.json_data["rss"])[tr_index]
+                    plot_data = getattr(plots_functions, "generate_heatmap")(x,y,z_data, "RSS: Transmitter {}".format(tr_index),"Received signal strength(RSS)", vmin=self._extractor.json_data["vmin"], vmax=self._extractor.json_data["vmax"])
             elif plot_name =="Channel frequency response":
                 ind1 = self.index_selector.Value
                 ind2 = self.index_selector2.Value

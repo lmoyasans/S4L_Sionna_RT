@@ -12,11 +12,10 @@ class AntennaArray:
         self._properties: XCoreHeadless.DialogOptions = XCoreHeadless.DialogOptions()
         if name != None:
             self._properties.Description = name
+        self.config = conf.create_AntennaArray()
 
     def draw(self, parent, name):
         self._properties.Clear()
-
-        self.config = conf.create_AntennaArray()
 
         draw_properties(self, self.config)
         parent.Add(name, self._properties)

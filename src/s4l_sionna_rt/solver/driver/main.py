@@ -328,6 +328,7 @@ if solver_settings["type"] == "RadioMap":
         "image":output_dir + "/render_file.png",
         "vmin":rm_vmin,
         "vmax":rm_vmax,
+        "db_scale":solver_settings["rm_db_scale"],
     }
 
     with open(os.path.join(output_dir, "summary.json"), "w") as f:

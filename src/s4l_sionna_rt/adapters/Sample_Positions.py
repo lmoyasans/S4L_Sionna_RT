@@ -12,12 +12,10 @@ class Sample_Positions:
         self._properties: XCoreHeadless.DialogOptions = XCoreHeadless.DialogOptions()
         if name != None:
             self._properties.Description = name
+        self.config = conf.create_Sample_Positions()
 
     def draw(self, parent, name):
         self._properties.Clear()
-
-        self.config = conf.create_Sample_Positions()
-
         draw_properties(self, self.config)
         parent.Add(name, self._properties)
         for prop in self._properties:

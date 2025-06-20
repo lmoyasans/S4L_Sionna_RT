@@ -102,6 +102,18 @@ class SolverSettings(TreeItem):
             state: The serialized state to restore from
         """
         super().__setstate__(state)
+        
+        solver_value = self._properties.type.Value
+
+        self._properties.Clear()
+        typ = XCore.PropertyEnum(
+            self.enums,
+            solver_value,
+        )
+        #type.Value = material_value
+        typ.OnModified.Connect(self._update)
+        self._properties.Add("type", typ)
+        draw_properties(self,self.config)
 
     @property
     def description(self) -> str:

@@ -138,6 +138,8 @@ class MaterialSettings(HasGeometries):
 
     def __setstate__(self, state) -> None:
         super().__setstate__(state)
+        self._properties.Clear()
+        draw_properties(self,self.config)
 
     @property
     def description(self) -> str:

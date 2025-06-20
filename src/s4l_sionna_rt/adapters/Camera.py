@@ -13,11 +13,11 @@ class Camera:
         if name != None:
             self._properties.Description = name
 
-    def draw(self, parent, name):
-        self._properties.Clear()
-
         self.config = conf.create_Camera()
 
+    def draw(self, parent, name):
+
+        self._properties.Clear()
         draw_properties(self, self.config)
         parent.Add(name, self._properties)
 

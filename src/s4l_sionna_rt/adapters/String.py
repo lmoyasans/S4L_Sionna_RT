@@ -31,6 +31,7 @@ class String:
                 return
         if self.dropdown:
             self.value = property.ValueDescription
+            self.chosen = property.Value
         else:
             self.value = property.Value
 

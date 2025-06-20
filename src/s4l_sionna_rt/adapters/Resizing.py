@@ -12,12 +12,10 @@ class Resizing:
         self._properties: XCoreHeadless.DialogOptions = XCoreHeadless.DialogOptions()
         if name != None:
             self._properties.Description = name
+        self.config = conf.create_Resizing()
 
     def draw(self, parent, name):
         self._properties.Clear()
-
-        self.config = conf.create_Resizing()
-
         draw_properties(self, self.config)
         parent.Add(name, self._properties)
         for prop in self._properties:
